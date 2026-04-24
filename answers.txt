@@ -293,3 +293,53 @@ Secure product search result: []
 Using `?` placeholders prevents SQL injection because user input is treated strictly as data, not executable SQL. Unlike string concatenation, parameterized queries separate query logic from input, so malicious payloads cannot alter the query structure. This is why all attack attempts fail and return empty results.
 
 Screenshot: screenshots/task4.png
+
+========================================
+TASK 5 – Input Validation
+========================================
+
+-- validation.js code --
+function validateUsername(username) {
+  // Reject empty or too short usernames
+  if (!username || username.length < 3) {
+    return false;
+  }
+  // Reject usernames with spaces or special characters
+  const regex = /^[a-zA-Z0-9_]+$/;
+  return regex.test(username);
+}
+
+function validatePassword(password) {
+  // Require minimum length
+  if (!password || password.length < 6) {
+    return false;
+  }
+  // Reject obvious patterns
+  if (password.toLowerCase() === "password") {
+    return false;
+  }
+  return true;
+}
+
+function validateProductName(name) {
+  // Reject dangerous characters often used in SQL injection
+  const forbidden = /['";]/;   // ✅ removed the problematic -- 
+  return !forbidden.test(name);
+}
+
+// Example tests
+console.log("Username test:", validateUsername("ad"));       // false
+console.log("Password test:", validatePassword("123"));      // false
+console.log("Product test:", validateProductName("Cement")); // true
+console.log("Product test:", validateProductName("' OR 1=1")); // false
+
+-- Terminal outputs --
+Username test: false
+Password test: false
+Product test: true
+Product test: false
+
+-- Explanation --
+Parameterization protects the database, but input validation protects the application itself. By rejecting invalid inputs (like too short passwords, usernames with spaces, or dangerous characters in product names), the system ensures only clean, expected data reaches the database. This adds another layer of security beyond SQL injection prevention.
+
+Screenshot: screenshots/task5.png
