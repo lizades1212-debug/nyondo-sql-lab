@@ -80,3 +80,86 @@ Screenshot: screenshots/task1.png
 
 Explanation:  
 The database and products table were created successfully, and all five products were inserted. The SELECT * query confirms the data is stored correctly and retrievable.
+
+========================================
+TASK 2 – Queries
+========================================
+
+-- queries.js code --
+
+const Database = require('better-sqlite3');
+const db = new Database('nyondo_stock.db');
+
+// Query A
+console.log("Query A:", db.prepare("SELECT * FROM products").all());
+
+// Query B
+console.log("Query B:", db.prepare("SELECT name, price FROM products").all());
+
+// Query C
+console.log("Query C:", db.prepare("SELECT * FROM products WHERE id=3").all());
+
+// Query D
+console.log("Query D:", db.prepare("SELECT * FROM products WHERE name LIKE '%sheet%'").all());
+
+// Query E
+console.log("Query E:", db.prepare("SELECT * FROM products ORDER BY price DESC").all());
+
+// Query F
+console.log("Query F:", db.prepare("SELECT * FROM products ORDER BY price DESC LIMIT 2").all());
+
+// Query G
+db.prepare("UPDATE products SET price=38000 WHERE id=1").run();
+console.log("Query G:", db.prepare("SELECT * FROM products").all());
+
+
+-- Query A: SELECT * FROM products --
+Output:
+[All 5 products with id, name, description, price]
+
+Explanation:
+This query retrieves all columns from the products table, confirming that the data is stored correctly.
+
+-- Query B: SELECT name, price FROM products --
+Output:
+[Product names and prices only]
+
+Explanation:
+This query selects specific columns (name and price), showing how to limit results to only needed fields.
+
+-- Query C: SELECT * FROM products WHERE id = 3 --
+Output:
+[Paint 5L record]
+
+Explanation:
+This query filters by product ID, returning only the row with id = 3.
+
+-- Query D: SELECT * FROM products WHERE price > 100000 --
+Output:
+[Iron Sheet 3m record]
+
+Explanation:
+This query filters products by price greater than 100,000, showing only expensive items.
+
+-- Query E: SELECT * FROM products ORDER BY price DESC --
+Output:
+[Products sorted from highest to lowest price]
+
+Explanation:
+This query sorts results by price in descending order, confirming sorting works correctly.
+
+-- Query F: SELECT * FROM products WHERE price BETWEEN 50000 AND 120000 --
+Output:
+[Iron Sheet 3m and Paint 5L records]
+
+Explanation:
+This query uses a range filter to return products priced between 50,000 and 120,000.
+
+-- Query G: UPDATE products SET price = 38000 WHERE id = 1 --
+Output:
+[Cement (bag) record now shows updated price 38000]
+
+Explanation:
+This query updates the price of Cement (bag) and confirms that changes persist in the database.
+
+Screenshot: screenshots/task2.png
